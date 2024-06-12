@@ -28,4 +28,4 @@ coverage.out
 *.log
 
 #.DS_Store
-**/.DS_Store
+.DS_Store
