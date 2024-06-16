@@ -7,13 +7,12 @@ import (
 	"os"
 
 	"github.com/impr0ver/gophKeeper/internal/userdata"
-	"github.com/impr0ver/gophKeeper/internal/logger"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
 )
 
-// fileStorage keeps records on disk.
+// fileStorage store records on disk as file.
 type fileStorage struct {
 	directory string
 }
@@ -47,10 +46,8 @@ func (storage *fileStorage) CreateRecord(_ context.Context, record userdata.Reco
 
 // GetRecord reads file with record data.
 func (storage *fileStorage) GetRecord(ctx context.Context, recordID string) (userdata.Record, error) {
-	sLogger := logger.NewSugarLogger()
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("recordMetadata")) == 0 {
-		sLogger.Info("Failed get record metadata from context in getting file record")
 		log.Println("Failed get record metadata from context in getting file record")
 		return userdata.Record{}, ErrUnknown
 	}

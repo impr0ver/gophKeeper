@@ -22,12 +22,12 @@ var _ = func() bool {
 
 func TestNewDBStorage(t *testing.T) {
 	assert.NotPanics(t, func() {
-		NewDBStorage("")
+		NewDBStorage("", "")
 	})
 }
 
 func TestDBStorage_CreateUser(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
@@ -106,7 +106,7 @@ func TestDBStorage_CreateUser(t *testing.T) {
 }
 
 func TestDBStorage_LoginUser(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
 	storage.DB = db
@@ -178,7 +178,7 @@ func TestDBStorage_LoginUser(t *testing.T) {
 }
 
 func TestDBStorage_GetRecordsInfo(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
 	storage.DB = db
@@ -259,7 +259,7 @@ func TestDBStorage_GetRecordsInfo(t *testing.T) {
 }
 
 func TestDBStorage_CreateRecord(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
 	storage.DB = db
@@ -345,7 +345,7 @@ func TestDBStorage_CreateRecord(t *testing.T) {
 }
 
 func TestDBStorage_GetRecord(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
 	storage.DB = db
@@ -439,7 +439,7 @@ func TestDBStorage_GetRecord(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRecord(t *testing.T) {
-	storage := newDBStorage("")
+	storage := newDBStorage("", "")
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	assert.NoError(t, err)
 	storage.DB = db

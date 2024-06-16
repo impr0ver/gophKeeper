@@ -15,6 +15,7 @@ type ServerConfig struct {
 	JWTAuth          AuthConfig
 	ServerCert       string
 	ServerKey        string
+	MigrationsURL    string
 	ServerConsoleLog bool
 }
 
@@ -27,11 +28,12 @@ type AuthConfig struct {
 var (
 	defaultListenAddr       = "127.0.0.1:9000"
 	defaultFilesStore       = "data"
-	defaultDSN              = "user=postgres password=karat911 host=localhost port=5432 dbname=gokeeper sslmode=disable" //user=postgres password=karat911 host=localhost port=5432 dbname=gokeeper sslmode=disable
+	defaultDSN              = "user=postgres password=karat911 host=localhost port=5432 dbname=gokeeper sslmode=disable" //user=postgres password=mypassword host=localhost port=5432 dbname=gokeeper sslmode=disable
 	defaultJWTSecret        = "mySuperSecretKey"
 	defaultExpirationTime   = time.Duration(2 * time.Minute)
 	defaultServerCert       = "../../cmd/cert/server-cert.pem"
 	defaultServerKey        = "../../cmd/cert/server-key.pem"
+	defaultMigrationsURL    = "../../migrations"
 	defaultServerConsoleLog = true
 )
 
@@ -49,6 +51,7 @@ func NewServerConfig() ServerConfig {
 	flag.DurationVar(&cfg.JWTAuth.ExpirationTime, "exptime", defaultExpirationTime, "Token expiration time")
 	flag.StringVar(&cfg.ServerCert, "servcert", defaultServerCert, "Path to server certificat for TLS")
 	flag.StringVar(&cfg.ServerKey, "servkey", defaultServerKey, "Path to server key for TLS")
+	flag.StringVar(&cfg.MigrationsURL, "migrateURL", defaultMigrationsURL, "Path to migrations for DB")
 	flag.BoolVar(&cfg.ServerConsoleLog, "servconslog", defaultServerConsoleLog, "Console log request and MD data on server interceptors")
 
 	flag.Parse()
@@ -82,6 +85,10 @@ func NewServerConfig() ServerConfig {
 
 	if v, ok := os.LookupEnv("SERVER_KEY"); ok {
 		cfg.ServerKey = v
+	}
+
+	if v, ok := os.LookupEnv("MIGRATE_URL"); ok {
+		cfg.MigrationsURL = v
 	}
 
 	if v, ok := os.LookupEnv("SERVCONS_LOG"); ok {

@@ -1,0 +1,7 @@
+github.com/impr0ver/gophKeeper/internal/handlers/mocks/Authenticator.go
+github.com/impr0ver/gophKeeper/internal/handlers/mocks/ClientConnection.go
+github.com/impr0ver/gophKeeper/internal/handlers/mocks/ServerHandlers.go
+github.com/impr0ver/gophKeeper/internal/rpc/rpc.pb.go
+github.com/impr0ver/gophKeeper/internal/rpc/rpc_grpc.pb.go
+github.com/impr0ver/gophKeeper/internal/storage/mocks/FileStorager.go
+github.com/impr0ver/gophKeeper/internal/storage/mocks/Storager.go

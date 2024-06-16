@@ -39,7 +39,7 @@ func (s *Storage) GetRecordsInfo(ctx context.Context) ([]userdata.Record, error)
 	return s.DBStorage.GetRecordsInfo(ctx)
 }
 
-// CreateRecord creates record, saves to DB. If record type is file, saves to file storage too.
+// CreateRecord creates record, saves to DB and saves to file storage if record type is file.
 func (s *Storage) CreateRecord(ctx context.Context, record userdata.Record) (string, error) {
 	data := record.Data
 
@@ -54,6 +54,7 @@ func (s *Storage) CreateRecord(ctx context.Context, record userdata.Record) (str
 		return "", err
 	}
 
+	// Check is Type is file, then work with file
 	if record.Type == userdata.TypeFile {
 		record.ID = id
 		record.Data = data
@@ -64,7 +65,7 @@ func (s *Storage) CreateRecord(ctx context.Context, record userdata.Record) (str
 	return id, nil
 }
 
-// DeleteRecord deletes record from DB storage. If record type is file, delete file from storage.
+// DeleteRecord deletes record from DB storage and, delete file from storage if record type is file.
 func (s *Storage) DeleteRecord(ctx context.Context, recordID string) error {
 	err := s.DBStorage.DeleteRecord(ctx, recordID)
 	if err != nil {
@@ -81,7 +82,7 @@ func (s *Storage) DeleteRecord(ctx context.Context, recordID string) error {
 	return nil
 }
 
-// GetRecord gets record from DB or file storage.
+// GetRecord gets record from DB or file storage if record type is file.
 func (s *Storage) GetRecord(ctx context.Context, recordID string) (userdata.Record, error) {
 	record, err := s.DBStorage.GetRecord(ctx, recordID)
 	if err != nil {

@@ -17,8 +17,8 @@ type DataBaseStorager interface {
 }
 
 // NewDBStorage connects to DB (interface).
-func NewDBStorage(connectionURL string) DataBaseStorager {
-	return newDBStorage(connectionURL)
+func NewDBStorage(connectionURL string, migrateURL string) DataBaseStorager {
+	return newDBStorage(connectionURL, migrateURL)
 }
 
 // FileStorager interface for storage, which can storage files.

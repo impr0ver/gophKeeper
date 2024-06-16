@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// LoggingInterceptor logging some data on interceptor.
 func (s *ServerConn) LoggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	var sLogger = logger.NewSugarLogger()
 
@@ -24,6 +25,7 @@ func (s *ServerConn) LoggingInterceptor(ctx context.Context, req interface{}, in
 	return resp, err
 }
 
+// VerifyAuth check authentication token on interceptor.
 func (s *ServerConn) VerifyAuth() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		var sLogger = logger.NewSugarLogger()
@@ -32,7 +34,7 @@ func (s *ServerConn) VerifyAuth() grpc.UnaryServerInterceptor {
 		md, ok := metadata.FromIncomingContext(ctx)
 
 		if s.ServerConsoleLog {
-			sLogger.Info("MD on interceptor: ", md.String())
+			sLogger.Info("Hooked MD on interceptor: ", md.String())
 		}
 
 		if ok && len(md.Get("authToken")) > 0 {
@@ -44,15 +46,15 @@ func (s *ServerConn) VerifyAuth() grpc.UnaryServerInterceptor {
 
 			userIDValid, err := s.Authenticator.ValidateToken(userdata.AuthToken(token))
 			if err != nil {
-				log.Warnf("%s :: %v", "interceptor validate token fault", err)
+				log.Warnf("%s :: %v", "interceptor validate token error", err)
 				if s.ServerConsoleLog {
-					sLogger.Infof("%s :: %v", "interceptor validate token fault", err)
+					sLogger.Infof("%s :: %v", "interceptor validate token error", err)
 				}
 
-				return nil, status.Errorf(codes.Unauthenticated, "validate token fault :: %v", err)
+				return nil, status.Errorf(codes.Unauthenticated, "validate token error :: %v", err)
 			}
 
-			// Add userID in context
+			// Add validated userID in context
 			md.Append("userID", string(userIDValid))
 			ctx = metadata.NewIncomingContext(ctx, md)
 		}

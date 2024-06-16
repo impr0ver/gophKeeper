@@ -20,7 +20,7 @@ type client struct {
 	Mu        *sync.Mutex
 }
 
-// newClientHandlers returns new client handlers.
+// newClientHandlers returns new client handlers with mutex.
 func newClientHandlers(connection ClientConnection) *client {
 	return &client{
 		conn: connection,
@@ -28,14 +28,14 @@ func newClientHandlers(connection ClientConnection) *client {
 	}
 }
 
-// Login logins user by login and password.
+// Login logins user by creds.
 func (c *client) Login(credentials userdata.UserCredentials) error {
 	if credentials.Login == "" || credentials.Password == "" || len(credentials.AESKey) == 0 {
 		return ErrEmptyField
 	}
 	authToken, err := c.conn.Login(credentials)
 	if err != nil {
-		log.Warnf("%s :: %v", "auth token fault", err)
+		log.Warnf("%s :: %v", "auth token error", err)
 
 		return err
 	}
@@ -49,7 +49,7 @@ func (c *client) Login(credentials userdata.UserCredentials) error {
 	return nil
 }
 
-// SetAESKey sets the new AES key
+// SetAESKey reset the new AES key
 func (c *client) SetAESKey(newAESKey string) error {
 	if newAESKey == "" || len(newAESKey) == 0 {
 		return ErrEmptyField
@@ -62,14 +62,14 @@ func (c *client) SetAESKey(newAESKey string) error {
 	return nil
 }
 
-// Register creates new user by login and password.
+// Register creates new user by creds.
 func (c *client) Register(credentials userdata.UserCredentials) error {
 	if credentials.Login == "" || credentials.Password == "" || len(credentials.AESKey) == 0 {
 		return ErrEmptyField
 	}
 	authToken, err := c.conn.Register(credentials)
 	if err != nil {
-		log.Warnf("%s :: %v", "register fault", err)
+		log.Warnf("%s :: %v", "register error", err)
 
 		return err
 	}
@@ -91,7 +91,7 @@ func (c *client) GetRecordsInfo() ([]userdata.Record, error) {
 	return c.conn.GetRecordsInfo(c.authToken)
 }
 
-// GetRecord gets record by recordID and decrypt.
+// GetRecord gets record by recordID and decrypt cipherdata.
 func (c *client) GetRecord(recordID string) (userdata.Record, error) {
 	c.Mu.Lock()
 	defer c.Mu.Unlock()
@@ -115,14 +115,14 @@ func (c *client) GetRecord(recordID string) (userdata.Record, error) {
 	if record.Type == userdata.TypeFile {
 		file, err := os.Create(record.Metadata)
 		if err != nil {
-			log.Warnf("%s :: %v", "create metadata-file fault", err)
+			log.Warnf("%s :: %v", "create file error", err)
 
 			return record, storage.ErrUnknown
 		}
 
 		_, err = file.Write(record.Data)
 		if err != nil {
-			log.Warnf("%s :: %v", "write in file fault", err)
+			log.Warnf("%s :: %v", "write in file error", err)
 
 			return record, storage.ErrUnknown
 		}
@@ -132,7 +132,7 @@ func (c *client) GetRecord(recordID string) (userdata.Record, error) {
 	return record, nil
 }
 
-// DeleteRecord deletes record by his ID.
+// DeleteRecord deletes record by ID.
 func (c *client) DeleteRecord(recordID string) error {
 	c.Mu.Lock()
 	defer c.Mu.Unlock()
@@ -140,7 +140,7 @@ func (c *client) DeleteRecord(recordID string) error {
 	return c.conn.DeleteRecord(c.authToken, recordID)
 }
 
-// CreateRecord creates new record and crypt.
+// CreateRecord creates new record and crypt plaindata.
 func (c *client) CreateRecord(record userdata.Record) error {
 	c.Mu.Lock()
 	defer c.Mu.Unlock()

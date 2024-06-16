@@ -26,10 +26,9 @@ func main() {
 	conn := handlers.NewClientConnection(cfg.ServerAddress, cfg.ClientCert)
 	handlers := handlers.NewClientHandlers(conn)
 
-	termUserInterface := clientwork.NewTUI(handlers)
+	termUserInterface := clientwork.NewTUI(handlers, cfg.MaxFileSize)
 
-	//TUI close app via Ctrl+C 
-	//(via method "app.Stop()" lib "tview" is not work properly)
+	//TUI close app via Ctrl+C (via method "app.Stop()" in lib "tview" is not work properly)
 	err := termUserInterface.Run()
 	if err == nil {
 		log.Info("Stop client (TUI) successfully")

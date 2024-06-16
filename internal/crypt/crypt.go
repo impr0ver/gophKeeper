@@ -77,16 +77,16 @@ func AES256CBCDecode(cipherText []byte, key string) ([]byte, error) {
 
 	block, err := aes.NewCipher(bKey)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	if len(cipherText) < aes.BlockSize {
-		panic("cipherText too short")
+		log.Panic("cipherText too short")
 	}
 	iv := cipherText[:aes.BlockSize]
 	cipherText = cipherText[aes.BlockSize:]
 	if len(cipherText)%aes.BlockSize != 0 {
-		panic("cipherText is not a multiple of the block size")
+		log.Panic("cipherText is not a multiple of the block size")
 	}
 
 	mode := cipher.NewCBCDecrypter(block, iv)

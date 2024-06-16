@@ -5,13 +5,13 @@ import "google/protobuf/empty.proto";
 package rpc;
 option go_package = "rpc/proto";
 
-message UserCredentials {
-  string login = 1;
-  string password = 2;
-}
-
 message RecordID {
   string id = 1;
+}
+
+message UserCreds {
+  string login = 1;
+  string password = 2;
 }
 
 enum MessageType {
@@ -30,8 +30,8 @@ message Record {
   string keyhint = 6;
 }
 
-message Session {
-  string session_token = 1;
+message Token {
+  string token = 1;
 }
 
 message RecordsList {
@@ -39,10 +39,10 @@ message RecordsList {
 }
 
 service Gokeeper {
-  rpc Register(UserCredentials) returns (Session);
-  rpc Login(UserCredentials) returns (Session);
-  rpc GetRecordsInfo(google.protobuf.Empty) returns (RecordsList);
+  rpc Login(UserCreds) returns (Token);
+  rpc Register(UserCreds) returns (Token);
   rpc GetRecord(RecordID) returns (Record);
+  rpc GetRecordsInfo(google.protobuf.Empty) returns (RecordsList);
   rpc CreateRecord(Record) returns (google.protobuf.Empty);
   rpc DeleteRecord(RecordID) returns (google.protobuf.Empty);
 }

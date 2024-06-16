@@ -27,7 +27,7 @@ type UserID string
 // AuthToken is authorization token.
 type AuthToken string
 
-// Record is struct for decrypted or encrypted information.
+// Record is struct for send and seceived information.
 type Record struct {
 	ID       string
 	Metadata string
@@ -80,7 +80,7 @@ type BinaryFile struct {
 	File     *os.File
 }
 
-// Bytes gets bytes.
+// Bytes gets bytes of file.
 func (fdata *BinaryFile) Bytes() ([]byte, error) {
 	file, err := os.Open(fdata.FilePath)
 	if err != nil {
@@ -93,6 +93,18 @@ func (fdata *BinaryFile) Bytes() ([]byte, error) {
 	return io.ReadAll(fdata.File)
 }
 
+// Size gets file size
+func (fdata *BinaryFile) Size() (int64, error) {
+	fi, err := os.Stat(fdata.FilePath)
+	if err != nil {
+		log.Infoln(err)
+		
+		return 0, err
+	}
+
+	return fi.Size(), nil
+}
+
 // CreditCard for credit card data.
 type CreditCard struct {
 	Number         string
@@ -102,5 +114,5 @@ type CreditCard struct {
 
 // Bytes gets bytes.
 func (cdata *CreditCard) Bytes() ([]byte, error) {
-	return []byte(cdata.Number + "/t" + cdata.ExpirationDate + "/t" + cdata.CVC), nil
+	return []byte(cdata.Number + " | " + cdata.ExpirationDate + " | " + cdata.CVC), nil
 }

@@ -6,15 +6,17 @@
 <br>
 
 ### Клиент 
-Клиент представляет собой приложение, реализованное с помощью terminal user interface (TUI) библиотеки "tview". Клиент позволяет подключаться к серверу, получать список хранимой в БД информации, осуществлять RPC-запросы (авторизация, регистрация, список хранимой информации, создание, чтение, удаление записей из БД). При отправке и получении записей все данные шифруются и дешифруются соответственно при помощи симметричного алгоритма шифрования AES-256 в режиме CBC с длиной ключа 32 байта (AES-ключ указывается при авторизации и может изменяться из главного меню программы для доступа к информации, созданной ранее). Для удобства использования в клиенте предусмотрено отображение подсказки для AES-ключа (password hint). Кроме того на главной странице отображается meta-информация (согласно ТЗ). Terminal User Interface реализован таким образом, чтобы переход к различным страницам был логически связан и удобен.Переходы осуществляются при помощи нажатий различных комбинаций клавиш Ctrl+N - создать запись, Ctrl+D - удалить запись, Ctrl+K - изменить ключ шифрования, ESC - выход в предыдущее меню/logout и т.д. Клиент ведет логи и пишет их в файл 2006-01-02.log.
+Клиент представляет собой приложение, реализованное с помощью terminal user interface (TUI) библиотеки "tview". Клиент позволяет подключаться к серверу, получать список хранимой в БД информации, осуществлять RPC-запросы (авторизация, регистрация, список хранимой информации, создание, чтение, удаление записей из БД). При отправке и получении записей все данные шифруются и дешифруются соответственно при помощи симметричного алгоритма шифрования AES-256 в режиме CBC с длиной ключа 32 байта (AES-ключ указывается при авторизации и может изменяться из главного меню программы-клиента для доступа к информации, созданной ранее). Данные типа "файл" хранятся в зашифрованном виде на диске. Файл перед отправкой проходит проверку на допустимый размер (настраиваемый параметр). Для удобства использования в клиенте предусмотрено отображение подсказки для AES-ключа (password hint). Кроме того, на главной странице отображается meta-информация (согласно ТЗ). Terminal User Interface реализован таким образом, чтобы переход к различным страницам был логически связан и удобен. Переходы осуществляются при помощи нажатий различных комбинаций клавиш Ctrl+N - создать запись, Ctrl+D - удалить запись, Ctrl+K - изменить ключ шифрования, ESC - выход в предыдущее меню/logout и т.д. Клиент ведет логи и пишет их в файл 2006-01-02.log.
 <br>
 
 #### Параметры запуска клиента:
-Usage of /var/folders/97/djh8xprn2xjdd5b59z_2zmxm0000gn/T/go-build4094180697/b001/exe/main:
-  -addr string
-    	Server address and port (default "127.0.0.1:9000")
-  -clientcert string
-    	Path to client certificat for TLS (default "../../cmd/cert/ca-cert.pem")
+Usage of /var/folders/97/djh8xprn2xjdd5b59z_2zmxm0000gn/T/go-build854532775/b001/exe/main:
+  - addr string
+        Server address and port (default "127.0.0.1:9000")
+  - clientcert string
+        Path to client certificat for TLS (default "../../cmd/cert/ca-cert.pem")
+  - maxsize int
+        Max size of send file (type file) in MB (default 8388608)
 <br>
 
 ### Сервер
@@ -22,23 +24,25 @@ Usage of /var/folders/97/djh8xprn2xjdd5b59z_2zmxm0000gn/T/go-build4094180697/b00
 <br>
 
 #### Параметры запуска сервера:
-Usage of /var/folders/97/djh8xprn2xjdd5b59z_2zmxm0000gn/T/go-build3862893827/b001/exe/main:
-  -dsn string
-    	Source to DB (default "user=postgres password=mypassword host=localhost port=5432 dbname=gokeeper sslmode=disable")
-  -exptime duration
-    	Token expiration time (default 2m0s)
-  -filepath string
-    	Path to files store (default "data")
-  -jwtsecr string
-    	JWT secret (default "mySuperSecretKey")
-  -listenaddr string
-    	Server address and port (default "127.0.0.1:9000")
-  -servcert string
-    	Path to server certificat for TLS (default "../../cmd/cert/server-cert.pem")
-  -servconslog
-    	Console log request and MD data on server interceptors (default true)
-  -servkey string
-    	Path to server key for TLS (default "../../cmd/cert/server-key.pem")
+Usage of /var/folders/97/djh8xprn2xjdd5b59z_2zmxm0000gn/T/go-build3047423153/b001/exe/main:
+  - dsn string
+        Source to DB (default "user=postgres password=karat911 host=localhost port=5432 dbname=gokeeper sslmode=disable")
+  - exptime duration
+        Token expiration time (default 2m0s)
+  - filepath string
+        Path to files store (default "data")
+  - jwtsecr string
+        JWT secret (default "mySuperSecretKey")
+  - listenaddr string
+        Server address and port (default "127.0.0.1:9000")
+  - migrateURL string
+        Path to migrations for DB (default "../../migrations")
+  - servcert string
+        Path to server certificat for TLS (default "../../cmd/cert/server-cert.pem")
+  - servconslog
+        Console log request and MD data on server interceptors (default true)
+  - servkey string
+        Path to server key for TLS (default "../../cmd/cert/server-key.pem")
 <br>
 
 Передача данных между клиентом и сервером происходит в режиме защищенного соединения SSL/TLS (server-side TLS, not mutual). Для этого перед запуском программ неоходимо сгенерировать сертификаты и ключи при помощи команды "make cert" (см. содержимое файла Makefile). 

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// NewSugarLogger init zap sugar logger
 func NewSugarLogger() *zap.SugaredLogger {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -21,6 +22,7 @@ func NewSugarLogger() *zap.SugaredLogger {
 	return &sugar
 }
 
+// NewLogrusLogger init logrus logger
 func NewLogrusLogger() {
 	fileName := time.Now().Format("2006-01-02")
 	file, err := os.OpenFile(fmt.Sprintf("%s%s", fileName, ".log"), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)

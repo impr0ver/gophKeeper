@@ -1,6 +1,6 @@
 CLIENTNAME=client
 SERVERNAME=server
-BUILDFLAGS=-ldflags="-X 'main.buildVersion=v1.00' -X 'main.buildDate=$(shell date -u +'%Y-%m-%d %H:%M:%S')' -X 'main.buildCommit=${shell git rev-parse HEAD}'"
+BUILDFLAGS=-ldflags="-s -w -X 'main.buildVersion=v1.00' -X 'main.buildDate=$(shell date -u +'%Y-%m-%d %H:%M:%S')' -X 'main.buildCommit=${shell git rev-parse HEAD}'"
 
 cert:
 	cd cmd/cert; ./gen.sh; cd ../..;
@@ -18,19 +18,31 @@ build_server:
 build:
 	go build -o ./cmd/client/${CLIENTNAME} ${BUILDFLAGS} cmd/client/main.go
 	go build -o ./cmd/server/${SERVERNAME} ${BUILDFLAGS} cmd/server/main.go
+
+gorun_client:
+	cd cmd/client; go run main.go
 	
 run_client:
-	go run ./cmd/client/${CLIENTNAME}
+	./cmd/client/${CLIENTNAME} -clientcert=cmd/cert/ca-cert.pem
+
+run_client_maindir:
+	./${CLIENTNAME} -clientcert=cmd/cert/ca-cert.pem
+
+gorun_server:
+	cd cmd/server; go run main.go
 
 run_server:
-	go run ./cmd/server/${SERVERNAME}
+	./cmd/server/${SERVERNAME} -migrateURL=migrations -servcert=cmd/cert/server-cert.pem -servkey=cmd/cert/server-key.pem
+
+run_server_maindir:
+	./${SERVERNAME} -migrateURL=migrations -servcert=cmd/cert/server-cert.pem -servkey=cmd/cert/server-key.pem 
 
 test:
 	go clean -testcache
 	go test ./...
 
 cov:
-	go test -v -coverpkg=./... -coverprofile=coverage.out -covermode=count ./...
+	go test -v -coverpkg=./... -coverprofile=coverage.out -covermode=count ./... && ./exclude-from-code-coverage.sh
 	go tool cover -func coverage.out | grep total | awk '{print $3}'
 
 clean:

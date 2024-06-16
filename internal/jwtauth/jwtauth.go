@@ -28,6 +28,8 @@ func (a *authenticatorJWT) CreateToken(userID userdata.UserID) (userdata.AuthTok
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
+	
+	// Time now + expiration time from cfg config
 	claims["exp"] = time.Now().Add(a.expirationTime).Unix()
 	claims["userID"] = userID
 

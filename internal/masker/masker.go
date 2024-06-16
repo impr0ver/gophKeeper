@@ -1,5 +1,6 @@
 package masker
 
+// replaceAtIndex assert string to slice of rune and replace i-symbol on rune
 func replaceAtIndex(in string, r rune, i int) string {
 	out := []rune(in)
 	out[i] = r

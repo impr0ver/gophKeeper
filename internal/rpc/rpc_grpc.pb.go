@@ -20,10 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Gokeeper_Register_FullMethodName       = "/rpc.Gokeeper/Register"
 	Gokeeper_Login_FullMethodName          = "/rpc.Gokeeper/Login"
-	Gokeeper_GetRecordsInfo_FullMethodName = "/rpc.Gokeeper/GetRecordsInfo"
+	Gokeeper_Register_FullMethodName       = "/rpc.Gokeeper/Register"
 	Gokeeper_GetRecord_FullMethodName      = "/rpc.Gokeeper/GetRecord"
+	Gokeeper_GetRecordsInfo_FullMethodName = "/rpc.Gokeeper/GetRecordsInfo"
 	Gokeeper_CreateRecord_FullMethodName   = "/rpc.Gokeeper/CreateRecord"
 	Gokeeper_DeleteRecord_FullMethodName   = "/rpc.Gokeeper/DeleteRecord"
 )
@@ -32,10 +32,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GokeeperClient interface {
-	Register(ctx context.Context, in *UserCredentials, opts ...grpc.CallOption) (*Session, error)
-	Login(ctx context.Context, in *UserCredentials, opts ...grpc.CallOption) (*Session, error)
-	GetRecordsInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordsList, error)
+	Login(ctx context.Context, in *UserCreds, opts ...grpc.CallOption) (*Token, error)
+	Register(ctx context.Context, in *UserCreds, opts ...grpc.CallOption) (*Token, error)
 	GetRecord(ctx context.Context, in *RecordID, opts ...grpc.CallOption) (*Record, error)
+	GetRecordsInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordsList, error)
 	CreateRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteRecord(ctx context.Context, in *RecordID, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -48,17 +48,8 @@ func NewGokeeperClient(cc grpc.ClientConnInterface) GokeeperClient {
 	return &gokeeperClient{cc}
 }
 
-func (c *gokeeperClient) Register(ctx context.Context, in *UserCredentials, opts ...grpc.CallOption) (*Session, error) {
-	out := new(Session)
-	err := c.cc.Invoke(ctx, Gokeeper_Register_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *gokeeperClient) Login(ctx context.Context, in *UserCredentials, opts ...grpc.CallOption) (*Session, error) {
-	out := new(Session)
+func (c *gokeeperClient) Login(ctx context.Context, in *UserCreds, opts ...grpc.CallOption) (*Token, error) {
+	out := new(Token)
 	err := c.cc.Invoke(ctx, Gokeeper_Login_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,9 +57,9 @@ func (c *gokeeperClient) Login(ctx context.Context, in *UserCredentials, opts ..
 	return out, nil
 }
 
-func (c *gokeeperClient) GetRecordsInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordsList, error) {
-	out := new(RecordsList)
-	err := c.cc.Invoke(ctx, Gokeeper_GetRecordsInfo_FullMethodName, in, out, opts...)
+func (c *gokeeperClient) Register(ctx context.Context, in *UserCreds, opts ...grpc.CallOption) (*Token, error) {
+	out := new(Token)
+	err := c.cc.Invoke(ctx, Gokeeper_Register_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +69,15 @@ func (c *gokeeperClient) GetRecordsInfo(ctx context.Context, in *emptypb.Empty, 
 func (c *gokeeperClient) GetRecord(ctx context.Context, in *RecordID, opts ...grpc.CallOption) (*Record, error) {
 	out := new(Record)
 	err := c.cc.Invoke(ctx, Gokeeper_GetRecord_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gokeeperClient) GetRecordsInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordsList, error) {
+	out := new(RecordsList)
+	err := c.cc.Invoke(ctx, Gokeeper_GetRecordsInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +106,10 @@ func (c *gokeeperClient) DeleteRecord(ctx context.Context, in *RecordID, opts ..
 // All implementations must embed UnimplementedGokeeperServer
 // for forward compatibility
 type GokeeperServer interface {
-	Register(context.Context, *UserCredentials) (*Session, error)
-	Login(context.Context, *UserCredentials) (*Session, error)
-	GetRecordsInfo(context.Context, *emptypb.Empty) (*RecordsList, error)
+	Login(context.Context, *UserCreds) (*Token, error)
+	Register(context.Context, *UserCreds) (*Token, error)
 	GetRecord(context.Context, *RecordID) (*Record, error)
+	GetRecordsInfo(context.Context, *emptypb.Empty) (*RecordsList, error)
 	CreateRecord(context.Context, *Record) (*emptypb.Empty, error)
 	DeleteRecord(context.Context, *RecordID) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGokeeperServer()
@@ -119,17 +119,17 @@ type GokeeperServer interface {
 type UnimplementedGokeeperServer struct {
 }
 
-func (UnimplementedGokeeperServer) Register(context.Context, *UserCredentials) (*Session, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
-}
-func (UnimplementedGokeeperServer) Login(context.Context, *UserCredentials) (*Session, error) {
+func (UnimplementedGokeeperServer) Login(context.Context, *UserCreds) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedGokeeperServer) GetRecordsInfo(context.Context, *emptypb.Empty) (*RecordsList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRecordsInfo not implemented")
+func (UnimplementedGokeeperServer) Register(context.Context, *UserCreds) (*Token, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedGokeeperServer) GetRecord(context.Context, *RecordID) (*Record, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRecord not implemented")
+}
+func (UnimplementedGokeeperServer) GetRecordsInfo(context.Context, *emptypb.Empty) (*RecordsList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRecordsInfo not implemented")
 }
 func (UnimplementedGokeeperServer) CreateRecord(context.Context, *Record) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRecord not implemented")
@@ -150,26 +150,8 @@ func RegisterGokeeperServer(s grpc.ServiceRegistrar, srv GokeeperServer) {
 	s.RegisterService(&Gokeeper_ServiceDesc, srv)
 }
 
-func _Gokeeper_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserCredentials)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GokeeperServer).Register(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Gokeeper_Register_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GokeeperServer).Register(ctx, req.(*UserCredentials))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Gokeeper_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserCredentials)
+	in := new(UserCreds)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -181,25 +163,25 @@ func _Gokeeper_Login_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Gokeeper_Login_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GokeeperServer).Login(ctx, req.(*UserCredentials))
+		return srv.(GokeeperServer).Login(ctx, req.(*UserCreds))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Gokeeper_GetRecordsInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+func _Gokeeper_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserCreds)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GokeeperServer).GetRecordsInfo(ctx, in)
+		return srv.(GokeeperServer).Register(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Gokeeper_GetRecordsInfo_FullMethodName,
+		FullMethod: Gokeeper_Register_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GokeeperServer).GetRecordsInfo(ctx, req.(*emptypb.Empty))
+		return srv.(GokeeperServer).Register(ctx, req.(*UserCreds))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -218,6 +200,24 @@ func _Gokeeper_GetRecord_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GokeeperServer).GetRecord(ctx, req.(*RecordID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gokeeper_GetRecordsInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GokeeperServer).GetRecordsInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gokeeper_GetRecordsInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GokeeperServer).GetRecordsInfo(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -266,20 +266,20 @@ var Gokeeper_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GokeeperServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Register",
-			Handler:    _Gokeeper_Register_Handler,
-		},
-		{
 			MethodName: "Login",
 			Handler:    _Gokeeper_Login_Handler,
 		},
 		{
-			MethodName: "GetRecordsInfo",
-			Handler:    _Gokeeper_GetRecordsInfo_Handler,
+			MethodName: "Register",
+			Handler:    _Gokeeper_Register_Handler,
 		},
 		{
 			MethodName: "GetRecord",
 			Handler:    _Gokeeper_GetRecord_Handler,
+		},
+		{
+			MethodName: "GetRecordsInfo",
+			Handler:    _Gokeeper_GetRecordsInfo_Handler,
 		},
 		{
 			MethodName: "CreateRecord",

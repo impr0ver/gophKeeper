@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/impr0ver/gophKeeper/internal/logger"
 	"github.com/impr0ver/gophKeeper/internal/userdata"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -18,11 +20,12 @@ import (
 
 // dbStorage for db storage.
 type dbStorage struct {
-	DB *sql.DB
+	DB     *sql.DB
+	MigURL string
 }
 
 // NewDBStorage connects to DB.
-func newDBStorage(connectionURL string) *dbStorage {
+func newDBStorage(connectionURL string, migrateURL string) *dbStorage {
 	db, err := sql.Open("pgx", connectionURL)
 	if err != nil {
 		log.Fatalln("Failed open DB storage:", err)
@@ -31,21 +34,24 @@ func newDBStorage(connectionURL string) *dbStorage {
 	}
 
 	return &dbStorage{
-		DB: db,
+		DB:     db,
+		MigURL: migrateURL,
 	}
 }
 
 // MigrateUP migrates DB.
 func (ds *dbStorage) MigrateUP() {
+	var sLogger = logger.NewSugarLogger()
 	driver, err := postgres.WithInstance(ds.DB, &postgres.Config{})
 	if err != nil {
-		log.Fatalf("Failed create postgres instance: %v\n", err)
+		log.Infof("Failed create postgres instance: %v\n", err)
+		sLogger.Fatalf("Failed create postgres instance: %v\n", err)
 	}
 
-	mig, errMigrate := migrate.NewWithDatabaseInstance("file://../../migrations", "pgx", driver)
+	mig, errMigrate := migrate.NewWithDatabaseInstance(fmt.Sprintf("file://%s", ds.MigURL), "pgx", driver)
 	if errMigrate != nil {
-		log.Fatalf("Failed create migration instance: %v\n", err)
-
+		log.Infof("Failed create migration instance: %v\n", err)
+		sLogger.Fatalf("Failed create migration instance: %v\n", err)
 		return
 	}
 
@@ -92,7 +98,7 @@ func (ds *dbStorage) CreateUser(credentials userdata.UserCredentials) error {
 	return nil
 }
 
-// LoginUser check if credentials are valid. Returns userID.
+// LoginUser check if credentials are valid and return userID.
 func (ds *dbStorage) LoginUser(credentials userdata.UserCredentials) (userdata.UserID, error) {
 	var userID userdata.UserID
 
@@ -117,7 +123,7 @@ func (ds *dbStorage) LoginUser(credentials userdata.UserCredentials) (userdata.U
 	return userID, nil
 }
 
-// GetRecordsInfo gets all DB record from this user.
+// GetRecordsInfo gets all DB record by userID.
 func (ds *dbStorage) GetRecordsInfo(ctx context.Context) ([]userdata.Record, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("userID")) == 0 {
@@ -157,7 +163,7 @@ func (ds *dbStorage) GetRecordsInfo(ctx context.Context) ([]userdata.Record, err
 	return result, nil
 }
 
-// CreateRecord saves new record to DB, returns recordID.
+// CreateRecord saves new record to DB and return recordID.
 func (ds *dbStorage) CreateRecord(ctx context.Context, record userdata.Record) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("userID")) == 0 {
@@ -187,7 +193,7 @@ func (ds *dbStorage) CreateRecord(ctx context.Context, record userdata.Record) (
 	return recordID, nil
 }
 
-// GetRecord gets record from DB by ID.
+// GetRecord gets record from DB by userID.
 func (ds *dbStorage) GetRecord(ctx context.Context, recordID string) (userdata.Record, error) {
 	record := userdata.Record{}
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -227,7 +233,7 @@ func (ds *dbStorage) GetRecord(ctx context.Context, recordID string) (userdata.R
 	return record, nil
 }
 
-// DeleteRecord deletes record from DB by ID.
+// DeleteRecord deletes record from DB by userID.
 func (ds *dbStorage) DeleteRecord(ctx context.Context, recordID string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("userID")) == 0 {

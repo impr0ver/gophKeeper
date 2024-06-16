@@ -17,10 +17,10 @@ type server struct {
 }
 
 // newServerHandlers returns server handlers based on storage and authenticator (interface).
-func newServerHandlers(s storage.Storager, a Authenticator) *server {
+func newServerHandlers(storage storage.Storager, authenticator Authenticator) *server {
 	return &server{
-		Storage:       s,
-		Authenticator: a,
+		Storage:       storage,
+		Authenticator: authenticator,
 	}
 }
 
@@ -34,14 +34,14 @@ func (s *server) LoginUser(credentials userdata.UserCredentials) (userdata.AuthT
 
 	userID, err := s.Storage.LoginUser(credentials)
 	if err != nil {
-		log.Warnf("%s :: %v", "get user login fault", err)
+		log.Warnf("%s :: %v", "get user login error", err)
 
 		return "", err
 	}
 
 	authToken, errCreateToken := s.Authenticator.CreateToken(userID)
 	if errCreateToken != nil {
-		log.Warnf("%s :: %v", "create token fault", err)
+		log.Warnf("%s :: %v", "create token error", err)
 
 		return "", storage.ErrUnknown
 	}
@@ -59,7 +59,7 @@ func (s *server) CreateUser(credentials userdata.UserCredentials) (userdata.Auth
 		Login:    credentials.Login,
 		Password: crypt.PasswordHash(credentials),
 	}); err != nil {
-		log.Warnf("%s :: %v", "create new user fault", err)
+		log.Warnf("%s :: %v", "create new user error", err)
 
 		return "", err
 	}

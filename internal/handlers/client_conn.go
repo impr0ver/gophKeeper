@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/impr0ver/gophKeeper/internal/logger"
 	pb "github.com/impr0ver/gophKeeper/internal/rpc"
 
-	"github.com/impr0ver/gophKeeper/internal/userdata"
 	"github.com/impr0ver/gophKeeper/internal/storage"
+	"github.com/impr0ver/gophKeeper/internal/userdata"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -21,11 +22,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// ClientConnGPRC keeps connection with server. Uses gRPC.
+// ClientConnGPRC get connection with server via gRPC.
 type ClientConnGPRC struct {
 	pb.GokeeperClient
 }
 
+// ClientLoadTLSCredentials read and load client certificate.
 func clientLoadTLSCredentials(clientCert string) (credentials.TransportCredentials, error) {
 	// Load certificate of the CA who signed server's certificate
 	pemServerCA, err := os.ReadFile(clientCert)
@@ -46,11 +48,13 @@ func clientLoadTLSCredentials(clientCert string) (credentials.TransportCredentia
 	return credentials.NewTLS(config), nil
 }
 
-// NewClientConnection connects to server and returning connection.
+// NewClientConnection connects to server.
 func newClientConn(serverAddress, clientCert string) *ClientConnGPRC {
+	var sLogger = logger.NewSugarLogger()
 	tlsCredentials, err := clientLoadTLSCredentials(clientCert)
 	if err != nil {
-		log.Fatal("cannot load TLS credentials: ", err)
+		log.Infof("cannot load TLS credentials: %v\n", err)
+		sLogger.Fatalf("cannot load TLS credentials: %v\n", err)
 	}
 
 	conn, err := grpc.NewClient("passthrough:///"+serverAddress, grpc.WithTransportCredentials(tlsCredentials))
@@ -65,7 +69,7 @@ func newClientConn(serverAddress, clientCert string) *ClientConnGPRC {
 
 // Login logins user by login and password.
 func (c *ClientConnGPRC) Login(credentials userdata.UserCredentials) (string, error) {
-	session, err := c.GokeeperClient.Login(context.Background(), &pb.UserCredentials{
+	session, err := c.GokeeperClient.Login(context.Background(), &pb.UserCreds{
 		Login:    credentials.Login,
 		Password: credentials.Password,
 	})
@@ -80,17 +84,17 @@ func (c *ClientConnGPRC) Login(credentials userdata.UserCredentials) (string, er
 	}
 
 	if err != nil {
-		log.Warnf("%s :: %v", "login fault", err)
+		log.Warnf("%s :: %v", "login error", err)
 
 		return "", err
 	}
 
-	return session.SessionToken, nil
+	return session.Token, nil
 }
 
-// Register creates new user by login and password.
+// Register register user by login and password.
 func (c *ClientConnGPRC) Register(credentials userdata.UserCredentials) (string, error) {
-	session, err := c.GokeeperClient.Register(context.Background(), &pb.UserCredentials{
+	session, err := c.GokeeperClient.Register(context.Background(), &pb.UserCreds{
 		Login:    credentials.Login,
 		Password: credentials.Password,
 	})
@@ -106,10 +110,10 @@ func (c *ClientConnGPRC) Register(credentials userdata.UserCredentials) (string,
 		return "", ErrEmptyField
 	}
 
-	return session.SessionToken, nil
+	return session.Token, nil
 }
 
-// GetRecordsInfo gets all record.
+// GetRecordsInfo gets all records.
 func (c *ClientConnGPRC) GetRecordsInfo(token userdata.AuthToken) ([]userdata.Record, error) {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "authToken", string(token))
 	gotRecords, err := c.GokeeperClient.GetRecordsInfo(ctx, &emptypb.Empty{})
@@ -142,7 +146,8 @@ func (c *ClientConnGPRC) GetRecord(token userdata.AuthToken, recordID string) (u
 	gotRecord, err := c.GokeeperClient.GetRecord(ctx, &pb.RecordID{
 		Id: recordID,
 	})
-	record, code := userdata.Record{}, status.Code(err)
+	record := userdata.Record{}
+	code := status.Code(err)
 
 	switch code {
 	case codes.Internal:
@@ -163,7 +168,7 @@ func (c *ClientConnGPRC) GetRecord(token userdata.AuthToken, recordID string) (u
 	return record, nil
 }
 
-// DeleteRecord deletes record from server by ID.
+// DeleteRecord deletes record by ID.
 func (c *ClientConnGPRC) DeleteRecord(token userdata.AuthToken, recordID string) error {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "authToken", string(token))
 	_, err := c.GokeeperClient.DeleteRecord(ctx, &pb.RecordID{
@@ -183,7 +188,7 @@ func (c *ClientConnGPRC) DeleteRecord(token userdata.AuthToken, recordID string)
 	return nil
 }
 
-// CreateRecord creates record and saves to server.
+// CreateRecord creates record and saves on server side.
 func (c *ClientConnGPRC) CreateRecord(token userdata.AuthToken, record userdata.Record) error {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "authToken", string(token))
 	_, err := c.GokeeperClient.CreateRecord(ctx, &pb.Record{

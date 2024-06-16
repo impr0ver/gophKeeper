@@ -1,3 +1,4 @@
+#!/bin/sh
 # delete pem files
 rm *.pem 
 

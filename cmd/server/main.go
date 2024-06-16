@@ -29,7 +29,7 @@ func main() {
 	
 	buildInfo()
 	
-	dataBase := storage.NewDBStorage(cfg.DatabaseDSN)
+	dataBase := storage.NewDBStorage(cfg.DatabaseDSN, cfg.MigrationsURL)
 	dataBase.MigrateUP()
 	files := storage.NewFileStorage(cfg.FilesStore)
 	
@@ -39,7 +39,7 @@ func main() {
 	h := handlers.NewServerHandlers(stor, jwtAuth)
 	server := handlers.NewServerConn(h, jwtAuth, cfg.ServerCert, cfg.ServerKey, cfg.ServerConsoleLog)
 
-	go server.Run(context.Background(), cfg.ListenAddr)
+	go server.Start(context.Background(), cfg.ListenAddr)
 
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)

@@ -32,17 +32,17 @@ type ServerConn struct {
 }
 
 // NewServerConn returns new server connection.
-func NewServerConn(h ServerHandlers, a Authenticator, serverCert string, serverKey string, serverConsoleLog bool) *ServerConn {
+func NewServerConn(handlers ServerHandlers, authenticator Authenticator, serverCert string, serverKey string, serverConsoleLog bool) *ServerConn {
 	return &ServerConn{
-		Handlers:         h,
-		Authenticator:    a,
+		Handlers:         handlers,
+		Authenticator:    authenticator,
 		ServerCert:       serverCert,
 		ServerKey:        serverKey,
 		ServerConsoleLog: serverConsoleLog,
 	}
 }
 
-// loadTLSCredentials load certificates and provate key.
+// LoadTLSCredentials load certificates and provate key.
 func (s *ServerConn) loadTLSCredentials() (credentials.TransportCredentials, error) {
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(s.ServerCert, s.ServerKey)
@@ -59,8 +59,8 @@ func (s *ServerConn) loadTLSCredentials() (credentials.TransportCredentials, err
 	return credentials.NewTLS(config), nil
 }
 
-// Run runs server listener.
-func (s *ServerConn) Run(_ context.Context, runAddress string) {
+// Start runs server listener.
+func (s *ServerConn) Start(_ context.Context, runAddress string) {
 	sLogger := logger.NewSugarLogger()
 	listen, err := net.Listen("tcp", runAddress)
 	if err != nil {
@@ -69,7 +69,8 @@ func (s *ServerConn) Run(_ context.Context, runAddress string) {
 
 	tlsCredentials, err := s.loadTLSCredentials()
 	if err != nil {
-		log.Fatal("cannot load TLS credentials: ", err)
+		log.Infof("cannot load TLS credentials: %v\n", err)
+		sLogger.Fatalf("cannot load TLS credentials: %v\n", err)
 	}
 
 	grpcServ := grpc.NewServer(grpc.Creds(tlsCredentials), grpc.ChainUnaryInterceptor(grpc.UnaryServerInterceptor(s.LoggingInterceptor),
@@ -94,8 +95,8 @@ func (s *ServerConn) Stop() {
 	log.Println("Shutdown server gracefully.")
 }
 
-// Register process register endpoint.
-func (s *ServerConn) Register(_ context.Context, credentials *pb.UserCredentials) (*pb.Session, error) {
+// Register process register on server side.
+func (s *ServerConn) Register(_ context.Context, credentials *pb.UserCreds) (*pb.Token, error) {
 	token, err := s.Handlers.CreateUser(userdata.UserCredentials{
 		Login:    credentials.Login,
 		Password: credentials.Password,
@@ -114,16 +115,16 @@ func (s *ServerConn) Register(_ context.Context, credentials *pb.UserCredentials
 	}
 
 	if err != nil {
-		log.Warnf("%s %s :: %v", "register new user fault", credentials.Login, err)
+		log.Warnf("%s %s :: %v", "register new user error", credentials.Login, err)
 
 		return nil, status.Errorf(codes.Internal, "internal server error.")
 	}
 
-	return &pb.Session{SessionToken: string(token)}, nil
+	return &pb.Token{Token: string(token)}, nil
 }
 
-// Login process login endpoint.
-func (s *ServerConn) Login(_ context.Context, credentials *pb.UserCredentials) (*pb.Session, error) {
+// Login process login endpoint on server side.
+func (s *ServerConn) Login(_ context.Context, credentials *pb.UserCreds) (*pb.Token, error) {
 	token, err := s.Handlers.LoginUser(userdata.UserCredentials{
 		Login:    credentials.Login,
 		Password: credentials.Password,
@@ -142,15 +143,15 @@ func (s *ServerConn) Login(_ context.Context, credentials *pb.UserCredentials) (
 	}
 
 	if err != nil {
-		log.Warnf("%s %s :: %v", "login fault", credentials.Login, err)
+		log.Warnf("%s %s :: %v", "login error", credentials.Login, err)
 
 		return nil, status.Errorf(codes.Internal, "Internal server error.")
 	}
 
-	return &pb.Session{SessionToken: string(token)}, nil
+	return &pb.Token{Token: string(token)}, nil
 }
 
-// GetRecordsInfo process get all records endpoint.
+// GetRecordsInfo process get all records endpoint on server side.
 func (s *ServerConn) GetRecordsInfo(ctx context.Context, _ *emptypb.Empty) (*pb.RecordsList, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("authToken")) == 0 {
@@ -166,7 +167,7 @@ func (s *ServerConn) GetRecordsInfo(ctx context.Context, _ *emptypb.Empty) (*pb.
 	}
 
 	if err != nil {
-		log.Warnf("%s :: %v", "get record info fault", err)
+		log.Warnf("%s :: %v", "get record info error", err)
 
 		return nil, status.Errorf(codes.Internal, "internal server error.")
 	}
@@ -185,7 +186,7 @@ func (s *ServerConn) GetRecordsInfo(ctx context.Context, _ *emptypb.Empty) (*pb.
 	return &pb.RecordsList{Records: recordsList}, nil
 }
 
-// GetRecord process get record endpoint.
+// GetRecord process get record endpoint on server side.
 func (s *ServerConn) GetRecord(ctx context.Context, recordID *pb.RecordID) (*pb.Record, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("authToken")) == 0 {
@@ -207,7 +208,7 @@ func (s *ServerConn) GetRecord(ctx context.Context, recordID *pb.RecordID) (*pb.
 	}
 
 	if err != nil {
-		log.Warnf("%s :: %v", "get record fault", err)
+		log.Warnf("%s :: %v", "get record error", err)
 
 		return nil, status.Errorf(codes.Internal, "internal server error.")
 	}
@@ -221,7 +222,7 @@ func (s *ServerConn) GetRecord(ctx context.Context, recordID *pb.RecordID) (*pb.
 	}, nil
 }
 
-// CreateRecord process create record endpoint.
+// CreateRecord process create record endpoint on server side.
 func (s *ServerConn) CreateRecord(ctx context.Context, record *pb.Record) (*emptypb.Empty, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("authToken")) == 0 {
@@ -242,7 +243,7 @@ func (s *ServerConn) CreateRecord(ctx context.Context, record *pb.Record) (*empt
 	}
 
 	if err != nil {
-		log.Warnf("%s :: %v", "create record fault", err)
+		log.Warnf("%s :: %v", "create record error", err)
 
 		return &emptypb.Empty{}, status.Errorf(codes.Internal, "internal server error.")
 	}
@@ -250,7 +251,7 @@ func (s *ServerConn) CreateRecord(ctx context.Context, record *pb.Record) (*empt
 	return &emptypb.Empty{}, nil
 }
 
-// DeleteRecord process delete record endpoint.
+// DeleteRecord process delete record endpoint on server side.
 func (s *ServerConn) DeleteRecord(ctx context.Context, recordID *pb.RecordID) (*emptypb.Empty, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || len(md.Get("authToken")) == 0 {
@@ -272,7 +273,7 @@ func (s *ServerConn) DeleteRecord(ctx context.Context, recordID *pb.RecordID) (*
 	}
 
 	if err != nil {
-		log.Warnf("%s :: %v", "delete record fault", err)
+		log.Warnf("%s :: %v", "delete record error", err)
 
 		return &emptypb.Empty{}, status.Errorf(codes.Internal, "internal server error.")
 	}
