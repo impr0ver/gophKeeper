@@ -60,7 +60,7 @@ func (s *ServerConn) loadTLSCredentials() (credentials.TransportCredentials, err
 }
 
 // Start runs server listener.
-func (s *ServerConn) Start(_ context.Context, runAddress string) {
+func (s *ServerConn) Start(ctx context.Context, runAddress string) {
 	sLogger := logger.NewSugarLogger()
 	listen, err := net.Listen("tcp", runAddress)
 	if err != nil {
@@ -79,11 +79,19 @@ func (s *ServerConn) Start(_ context.Context, runAddress string) {
 	pb.RegisterGokeeperServer(grpcServ, s)
 
 	go func() {
-		log.Println("gRPC server is start...")
-		sLogger.Info("gRPC server is start...")
-		
-		if err := grpcServ.Serve(listen); err != nil {
-			log.Fatal(err)
+		for {
+			select {
+			case <-ctx.Done():
+				log.Infof("routine is shutdown by cancel: %v\n", ctx.Err())
+				return
+			default:
+				log.Println("gRPC server is start...")
+				sLogger.Info("gRPC server is start...")
+
+				if err := grpcServ.Serve(listen); err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
 	}()
 

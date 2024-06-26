@@ -23,29 +23,32 @@ var (
 
 func main() {
 	cfg := serverconfig.NewServerConfig()
-	
+
 	logger.NewLogrusLogger()
 	sLogger := logger.NewSugarLogger()
-	
+
 	buildInfo()
-	
+
 	dataBase := storage.NewDBStorage(cfg.DatabaseDSN, cfg.MigrationsURL)
 	dataBase.MigrateUP()
 	files := storage.NewFileStorage(cfg.FilesStore)
-	
+
 	stor := storage.NewStorage(dataBase, files)
 
 	jwtAuth := handlers.NewAuthenticatorJWT([]byte(cfg.JWTAuth.SecretJWT), cfg.JWTAuth.ExpirationTime)
 	h := handlers.NewServerHandlers(stor, jwtAuth)
 	server := handlers.NewServerConn(h, jwtAuth, cfg.ServerCert, cfg.ServerKey, cfg.ServerConsoleLog)
 
-	go server.Start(context.Background(), cfg.ListenAddr)
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, cfg.ListenAddr)
 
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	<-sigint
 
+	cancel()
 	server.Stop()
+	
 	sLogger.Info("gRPC server is gracefully stop!")
 	log.Info("gRPC server is gracefully stop!")
 }

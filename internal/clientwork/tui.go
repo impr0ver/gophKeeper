@@ -191,6 +191,7 @@ func (app *TUI) recordsInfoPage(message string) {
 	list.SetMainTextColor(tcell.ColorGrey)
 	list.SetSecondaryTextColor(tcell.ColorLightGreen)
 	list.SetShortcutColor(tcell.ColorLightGreen)
+	
 	for _, record := range records {
 
 		f := func(record userdata.Record) func() {

@@ -28,9 +28,10 @@ func TestCreateUser(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
-
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
+	
 	client := newClientConn(clientCfg.ServerAddress, clientCfg.ClientCert)
 
 	tc := []struct {
@@ -97,6 +98,10 @@ func TestCreateUser(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
+	
 }
 
 func TestLoginUser(t *testing.T) {
@@ -114,8 +119,8 @@ func TestLoginUser(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
 
 	tc := []struct {
 		name  string
@@ -181,6 +186,9 @@ func TestLoginUser(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
 }
 
 func TestGetRecordsInfo(t *testing.T) {
@@ -198,8 +206,8 @@ func TestGetRecordsInfo(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
 
 	tc := []struct {
 		name  string
@@ -250,6 +258,9 @@ func TestGetRecordsInfo(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
 }
 
 func TestGetRecord(t *testing.T) {
@@ -267,8 +278,8 @@ func TestGetRecord(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
 
 	tc := []struct {
 		name  string
@@ -319,6 +330,9 @@ func TestGetRecord(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
 }
 
 func TestCreateRecord(t *testing.T) {
@@ -336,8 +350,8 @@ func TestCreateRecord(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
 
 	tc := []struct {
 		name  string
@@ -382,6 +396,9 @@ func TestCreateRecord(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
 }
 
 func TestDeleteRecord(t *testing.T) {
@@ -399,8 +416,8 @@ func TestDeleteRecord(t *testing.T) {
 	handlers := mocks.NewServerHandlers(t)
 
 	server := NewServerConn(handlers, auth, serverCfg.ServerCert, serverCfg.ServerKey, serverCfg.ServerConsoleLog)
-	server.Start(context.Background(), serverCfg.ListenAddr)
-	defer server.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	server.Start(ctx, serverCfg.ListenAddr)
 
 	tc := []struct {
 		name  string
@@ -460,4 +477,7 @@ func TestDeleteRecord(t *testing.T) {
 		test.valid()
 		handlers.AssertExpectations(t)
 	}
+
+	cancel()
+	server.Stop()
 }

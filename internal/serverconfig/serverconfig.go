@@ -28,7 +28,7 @@ type AuthConfig struct {
 var (
 	defaultListenAddr       = "127.0.0.1:9000"
 	defaultFilesStore       = "data"
-	defaultDSN              = "user=postgres password=karat911 host=localhost port=5432 dbname=gokeeper sslmode=disable" //user=postgres password=mypassword host=localhost port=5432 dbname=gokeeper sslmode=disable
+	defaultDSN              = "" //user=postgres password=password host=localhost port=5432 dbname=gokeeper sslmode=disable
 	defaultJWTSecret        = "mySuperSecretKey"
 	defaultExpirationTime   = time.Duration(2 * time.Minute)
 	defaultServerCert       = "../../cmd/cert/server-cert.pem"
